@@ -21,8 +21,9 @@ class ModelsDiagram < AppDiagram
     get_files.each do |f|
       begin
         process_class extract_class_name(f).constantize
-      rescue Exception
+      rescue Exception => err
         STDERR.puts "Warning: exception #{$ERROR_INFO} raised while trying to load model class #{f}"
+        raise err
       end
     end
   end
@@ -129,8 +130,8 @@ class ModelsDiagram < AppDiagram
       end
 
       content_columns.each do |a|
-        content_column = a.name
-        content_column += ' :' + a.sql_type.to_s unless @options.hide_types
+        content_column = a.name.dup
+        content_column << " :#{a.sql_type}" unless @options.hide_types
         node_attribs << content_column
       end
     end
@@ -299,7 +300,7 @@ class ModelsDiagram < AppDiagram
     if class_name.include?('::') && !assoc_class_name.include?('::')
       assoc_class_name = class_name.split('::')[0..-2].push(assoc_class_name).join('::')
     end
-    assoc_class_name.gsub!(/^::/, '')
+    assoc_class_name = assoc_class_name.gsub(/^::/, '')
 
     if %w(has_one references_one embeds_one).include?(macro)
       assoc_type = 'one-one'
